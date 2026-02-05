@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dalbit EPS-Style UBT Simulator</title>
+
+  <style>
+    :root {
+      --navy: #000080;
+      --gold: #E1AD01;
+      --light-blue: #eef3ff;
+      --correct: #28a745;
+      --wrong: #dc3545;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Malgun Gothic', Arial, sans-serif;
+      background: #f4f6fb;
+      overflow: hidden; /* Iwas scroll sa buong page */
+    }
+
+    header { background: var(--navy); color: white; padding: 6px 15px; display: flex; align-items: center; }
+    header img { width: 70px; margin-right: 12px; }
+    header h1 { font-size: 23px; color: #E1AD01; margin: 0; flex: 1; text-align: center; }
+
+    .sub-header { background: #E1AD01; color: var(--navy); text-align: center; font-weight: bold; padding: 3px; font-size: 15px; }
+
+    .container { max-width: 800px; margin: 8px auto; background: white; padding: 12px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+
+    .top-bar { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold; font-size: 13px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+
+    /* Question Styling */
+    .question-box { min-height: 260px; }
+    #question { font-size: 17px; margin: 5px 0; line-height: 1.5; }
+    
+    /* Underline style - Simple at natural */
+    u { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px; }
+
+    .follow-up { font-weight: bold; font-size: 17px; color: black; display: block; margin: 4px 0; }
+    .keyword { color: var(--navy); font-size: 15px; font-weight: bold; display: block; }
+
+    #qImage { 
+  max-height: 250px; /* Dinagdagan mula 120px para mas malinaw */
+  width: auto; 
+  display: block; 
+  margin: 1px auto; 
+  border-radius: 2px; 
+}
+
+    /* Compact 2x2 Grid para sa Choices */
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .choices span { 
+      display: block; cursor: pointer; font-size: 16px; padding: 12px; 
+      border: 1px solid #ccc; border-radius: 6px; background: #fff; transition: 0.1s; 
+    }
+    .choices span:hover { background: var(--light-blue); }
+   .choices span img { 
+  width: 100%; 
+  max-width: 180px; /* Dinagdagan mula 100px para sa Listening options */
+  display: block; 
+  margin: 1px auto; 
+}
+
+    .selected { background: var(--navy) !important; color: #E1AD01 !important; font-weight: bold; border-color: var(--navy) !important; }
+
+    /* Audio UI */
+    .audio-ui { background: #f1f3f5; padding: 5px; border-radius: 5px; margin-bottom: 8px; text-align: center; }
+    audio { height: 28px; width: 100%; }
+    .audio-msg { font-size: 11px; color: crimson; font-weight: bold; }
+
+    .nav-buttons { display: flex; gap: 8px; margin-top: 12px; }
+    button { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .prev, .next { background: var(--navy); color: white; }
+    .submit { background: #E1AD01; color: var(--navy); width: 100%; margin-top: 8px; }
+
+    /* Review Area */
+    #reviewArea { display: none; margin-top: 10px; border-top: 2px solid var(--navy); padding-top: 10px; max-height: 400px; overflow-y: auto; }
+    .review-item { padding: 8px; border-left: 4px solid #ccc; margin-bottom: 5px; background: #f9f9f9; font-size: 13px; }
+    .correct-card { border-left-color: var(--correct); background: #e9f7ef; }
+    .wrong-card { border-left-color: var(--wrong); background: #fdf2f2; }
+  </style>
+</head>
+
+<body>
+<div id="startScreen" style="position:fixed; top:0; left:0; width:100%; height:100%; background: #FFF9E3 ; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:1000;">
+  
+  <div style="display: flex; flex-direction: column; align-items: center; background: var--navy; padding: 50px 60px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: fit-content; text-align: center; border: 2px solid #E1AD01;">
+    
+    <img src="https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/Dalbit%20Logo-Circle.png" style="width:120px; margin-bottom:20px;">
+    
+    <h1 style="color: var(--navy); margin-bottom: 10px; font-size: 28px;">DALBIT KLC</h1>
+    <h2 style="color: #555; margin-bottom: 30px; font-size: 20px; font-weight: bold;">EPS-TOPIK Style UBT Simulator</h2>
+    
+    <button onclick="startQuiz()" style="
+        padding: 18px 60px; 
+        font-size: 22px; 
+        background: var(--gold); 
+        color: var(--navy);
+        border: none; 
+        border-radius: 12px; 
+        cursor: pointer; 
+        font-weight: bold;
+        transition: transform 0.2s;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+      START EXAM
+    </button>
+    
+    <p style="margin-top:25px; font-size:15px; color: #777; font-weight: bold;">
+      Click START EXAM to begin
+    </p>
+  </div>
+</div>
+<header>
+  <img src="https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/Dalbit%20Logo-Circle.png">
+  <h1>DALBIT KOREAN LANGUAGE CENTER</h1>
+</header>
+<div class="sub-header">DALBIT EPS-TOPIK - UBT Simulator</div>
+
+<div class="container">
+  <div class="top-bar">
+    <div id="counter">Question 1 / 40</div>
+    <div id="timer">⏱ 50:00</div>
+  </div>
+
+  <div class="question-box" id="quizContent">
+    <div id="audioBox" class="audio-ui" style="display:none;">
+      <div id="audioMsg" class="audio-msg">🔊 Audio will play 2 times</div>
+      <audio id="audioPlayer" controls></audio>
+    </div>
+
+    <div id="question">Loading...</div>
+    <div id="qExtras"></div>
+    <img id="qImage" style="display:none;">
+    <div class="choices" id="choices"></div>
+  </div>
+
+  <div class="nav-buttons" id="navBtns">
+    <button class="prev" onclick="changeQ(-1)">⬅ Prev</button>
+    <button class="next" onclick="changeQ(1)">Next ➡</button>
+  </div>
+
+  <button class="submit" id="submitBtn" onclick="submitExam()">✅ Submit Exam</button>
+
+  <div id="reviewArea">
+    <h3 id="finalScore" style="text-align:center;"></h3>
+    <div id="reviewList"></div>
+    <button class="next" onclick="location.reload()" style="width:100%">RETAKE EXAM</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    type:"reading",
+    q:"[다음 그림을 보고 알맞은 것을 고르십시오].",
+    followUp:"1.",
+    image:"https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/Resize%20image%20project.png",
+    options:["볼펜입니다.","가위입니다.","안경입니다.","가방입니다."],
+    answer:3
+  },
+  {
+    type:"reading",
+    q:"[다음 그림을 보고 알맞은 것을 고르십시오.]",
+    followUp:"2.",
+    image:"https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/Resize%20image%20project%20(1).png",
+    options:["지게차입니다.","굴착기입니다.","트랙터입니다.","경운기입니다."],
+    answer:0
+  },
+  {
+    type:"reading",
+    q:"[다음 그림을 보고 알맞은 것을 고르십시오.]",
+    followUp:"3.",
+    image:"https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/Resize%20image%20project%20(2).png",
+    options:["책을 읽고 있습니다.","밥을 먹고 있습니다.","친구를 만나고 있습니다.","피아노를 치고 있습니다."],
+    answer:3
+  },
+  {
+    type:"reading",
+    q:"[다음 그림을 보고 알맞은 것을 고르십시오.]",
+    followUp:"4.",
+    image:"https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/Resize%20image%20project%20(3).png",
+    options:["전기가 흐르니까 조심하세요.","떨어질 수 있으니까 조심하세요.","바닥이 미끄러우니까 조심하세요.","불이 붙을 수 있으니까 조심하세요."],
+    answer:1
+  },
+  {
+    type:"reading",
+    q:"[다음 중 밑줄 친 부분이 맞는 것은 무엇입니까?]",
+    followUp:"5.", 
+    options:["집<u>을</u> 작아요.","딸기<u>가</u>먹어요.","회사<u>에</u> 다녀요.","겨울<u>에서</u> 추워요."],
+    answer:2
+  },
+  {
+    type:"reading",
+    q:"[다음 중 밑줄 친 부분이 맞는 것은 무엇입니까?]",
+    followUp:"6.", 
+    options:["퇴근할 때 문을 <u>달으세요</u>.","친구한테서 선물을 <u>받았어요</u>.","심심하면 한국 노래를 <u>듣어요</u>.","오늘 시내에서 많이 <u>걷었어요</u>."],
+    answer:1
+  },
+  {
+    type:"reading",
+    q:"[다음 글을 읽고 물음에 답하십시오.]",
+    followUp:"7. 이 병원이 문을 여는 시간은 언제입니까?",
+    image:"https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/card.jpg",
+    options:["부천시입니다.","김미소입니다.","튼튼치과입니다.","오전 아홉 시입니다."],
+    answer:3
+  },
+  {
+    type:"reading",
+    q:"[다음 단어와 관계있는 것은 무엇입니까?]",
+    followUp:"8.", 
+    keyword:"(복장)",
+    options:["컴퓨터","작업복","비빔밥","기차표"],
+    answer:1
+  },
+  {
+    type:"reading",
+    q:"[다음 단어와 관계있는 것은 무엇입니까?]",
+    keyword:"9.", 
+    keyword:"(작업장)",
+    options:["근로자가 일하는 곳이에요.","근로자가 거주하는 곳이에요.","근로자가 운동하는 곳이에요.","근로자가 상담하는 곳이에요."],
+    answer:0
+  },
+  {
+    type:"reading",
+    q:" ",
+    followUp:"10. 한국의 수산물 수입 현황에 대한 설명으로 맞는 것은 무엇입니까?",
+    image:"https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/graph.jpg",
+    options:["한국은 수산물을 중국에서 가장 많이 수입합니다.","한국이 수입하는 수산물 중 베트남산은 5% 미만입니다.","한국이 수산물을 수입하는 국가 중 2위는 노르웨이입니다.","한국은 미국보다 러시아에서 수산물을 더 많이 수입합니다."],
+    answer:3
+  },
+  {
+    type:"reading",
+    q:"[빈칸에 들어갈 가장 알맞은 것을 고르십시오.]",
+    followUp:"11. 지급 방법:_______",
+    options:["가족 모임","생일 선물","출근 시간","통장 입금"],
+    answer:3
+  },
+  {
+    type:"reading",
+    q:"",
+    followUp:"12. 한국어를 배우고 싶지만 학원에 갈 시간이 없습니다. 그래서 퇴근 후에 인터넷 강의를 한국어를 __________ 공부하고 있습니다.",
+    options:["듣느라고","들으려고","들으면서","듣자마자"],
+    answer:2
+  },
+  {
+    type:"reading",
+    q:"",
+    followUp:"13. 오늘은 다른 날보다 길이 많이 막힙니다. ______________ 가지 않으면 회사에 늦을 것 같습니다.",
+    options:["조심하게","조심해서","서두르게","서둘러서"],
+    answer:3
+  },
+  {
+    type:"reading",
+    q:"",
+    followUp:"14. 오늘은 날씨가 너무 덥습니다. 집에 오자마자 선풍기를 __________ 시원한 물을 마셨습니다.",
+    options:["틀면","틀고","틀려면","틀려고"],
+    answer:1
+  },
+  {
+    type:"reading",
+    q:"",
+    followUp:"15. 못에 찔렸을 때는 상처가 가벼워도 바로 소독을 해야 합니다. 그리고 병원에 가서 진료를 받고 주사를 ______________.",
+    options:["맞는 것이 좋습니다","놓는 것이 좋습니다","맞지 않도록 합니다","놓지 않도록 합니다"],
+    answer:0
+  },
+  {
+    type:"reading",
+    q:"",
+    followUp:"16. 어두운 곳에서 작업할 때는 가시성이 높은 ______________. 이것을 입으면 멀리서도 잘 보여 사고를 막을 수 있습니다.",
+    options:["반사 조끼를 착용해야 합니다","보호 장갑을 구매해야 합니다","비상 계단을 이용해야 합니다","환기 장치를 작동해야 합니다"],
+    answer:0
+  },
+  {
+    type:"reading",
+    q:"[다음 설명에 알맞은 어휘를 고르십시오.]",
+    followUp: "17. 손에 쥐고 철사를 끊거나 구부릴 때 쓰는 도구입니다. 전선이나 작은 부품을 잡을 때도 사용합니다.",
+    options:["토치","펜치","쇠톱","망치"],
+    answer:1
+  },
+  {
+    type:"reading",
+    q:"[다음 글을 읽고 무엇에 대한 글인지 고르십시오.]",
+    followUp: "18. 한국 사람들은 계절마다 즐겨 먹는 음식이 있습니다. 여름에는 차갑고 시원한 냉면, 콩국수, 팥빙수 등을 많이 먹습니다. 겨울에는 뜨거운 국이나 따뜻한 팥죽, 군고구마, 호떡 등을 자주 먹습니다.",
+    options:["계절 음식","음식 재료","조리 방법","조리 시기"],
+    answer:0
+  },
+  {
+    type:"reading",
+    q:"[다음 글을 읽고 내용과 같은 것을 고르십시오.]",
+    keyword:"19.",
+    image:"https://uploads.onecompiler.io/44cg7rvjp/44cg7rzzv/Picture1.jpg",
+    options:["사내 휴게실의 출입문 비밀번호는 따로 없습니다. ","회사 직원은 누구나 휴게실을 이용할 수 있습니다.","휴게실 이용 후에는 문을 열어 두고 나가야 합니다.","점심 도시락을 싸 가서 휴게실에서 먹을 수 있습니다."],
+    answer:1
+  },
+  {
+    type:"reading",
+    q:"",
+    followUp:"20. 한국에서 일하는 외국인 근로자는 4대 사회보험 혜택을 받습니다. 4대 사회보험 중 산재보험은 사업주만 가입하면 되지만 국민연금, 건강보험, 고용보험은 사업주와 근로자 모두 반드시 가입해야 합니다. 외국인 근로자는 질병, 부상, 상해, 실업 등이 발생하였을 때 가입한 4대 보험의 보험금을 받을 수 있습니다.",
+    options:["사업주는 4대 사회보험에 모두 가입해야 합니다.","산재보험은 근로자와 사업주가 모두 가입해야 합니다.","사업주는 사고가 발생하면 보험금을 받을 수 있습니다.","근로자는 가입하고 싶은 보험을 선택하여 가입할 수 있습니다."],
+    answer:0
+  },
+  {
+    type:"listening",
+    q:"[들은 것을 고르십시오.]",
+    followUp:"(*모든 듣기 문제는 두 번씩 들려 드립니다.)",
+    keyword:"21.",
+    audio:"audio/q21.mp3",
+    options:["가구","기구","가게","거기"],
+    answer:0
+  },
+  {
+    type:"listening",
+    q:"[들은 것을 고르십시오.]",
+    keyword:"22.",
+    audio:"audio/q22.mp3",
+    options:[" 적재","직장","적정","정전"],
+    answer:2
+  },
+  {
+    type:"listening",
+    q:"[다음을 듣고 들은 내용과 관계있는 그림을 고르십시오.]",
+    keyword:"23",
+    audio:"audio/q23.mp3",
+    options:["https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/21a.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/22b.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/23c.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/23d.jpg"],
+    answer:0
+  },
+  {
+    type:"listening",
+    q:"[다음을 듣고 들은 내용과 관계있는 그림을 고르십시오.]",
+    keyword:"24.",
+    audio:"audio/q24.mp3",
+    options:["https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/24a.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/24b.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/24c.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/24d.jpg"],
+    answer:1
+  },
+  {
+    type:"listening",
+    q:"다음 문장을 듣고 알맞은 것을 고르세요.",
+    keyword:"25",
+    audio:"audio/q25.mp3",
+    options:["https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/25a.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/25b.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/25c.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/25d.jpg"],
+    answer:0
+  },
+  {
+    type:"listening",
+    q:"다음 문장을 듣고 알맞은 것을 고르세요.",
+   keyword:"26.",
+    audio:"audio/q26.mp3",
+    options:["https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/26a.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/26b.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/26c.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/26d.jpg"],
+    answer:0
+  },
+  {
+    type:"listening",
+    q:"다음 문장을 듣고 알맞은 것을 고르세요.",
+    keyword:"27.",
+    audio:"audio/q27.mp3",
+    options:["https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/27a.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/27b.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/27c.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/27d.jpg"],
+    answer:2
+  },
+  {
+    type:"listening",
+    q:"다음 문장을 듣고 알맞은 것을 고르세요.",
+    keyword:"28.",
+    audio:"audio/q28.mp3",
+    options:["https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/28a.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/28b.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/28c.jpg","https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/28d.jpg"],
+    answer:0
+  },
+  {
+    type:"listening",
+    q:"다음을 듣고 질문에 알맞은 대답을 고르십시오.",
+    keyword:"29.",
+    audio:"audio/q29.mp3",
+    optionAudios:[
+    "audio/q29a.mp3",
+    "audio/q29b.mp3",
+    "audio/q29c.mp3",
+    "audio/q29d.mp3"],
+    options:["그럼요, 법률 교육은 못해요.","아니요, 항상 수업을 하고 있어요.","아니요, 법률 교육을 받고 있어요.","그럼요, 상담을 받고 신청하면 돼요."],
+    answer:3
+  },
+  {
+    type:"listening",
+    q:"다음 문장을 듣고 알맞은 것을 고르세요.",
+    keyword:"30.",
+    audio:"audio/q30.mp3",
+    optionAudios:[
+    "audio/q30a.mp3",
+    "audio/q30b.mp3",
+    "audio/q30c.mp3",
+    "audio/q30d.mp3"],
+    options:["네, 교육 일정을 좀 알려 주세요.","네, 취업이 빨리 돼야 할 텐데요.","아니요, 다음 주라고 들었는데요.","아니요, 교육 내용이 어려웠어요."],
+    answer:3
+  },
+  {
+    type:"listening",
+    q:"다음 문장을 듣고 알맞은 것을 고르세요.",
+    keyword:"31.",
+    audio:"audio/q31.mp3",
+    optionAudios:[
+    "audio/q31a.mp3",
+    "audio/q31b.mp3",
+    "audio/q31c.mp3",
+    "audio/q31d.mp3"],
+    options:["집에서 드세요.","감기약을 드세요.","밥을 먹은 후에 드세요.","따뜻한 물과 같이 드세요."],
+    answer:2
+  },
+  {
+    type:"listening",
+    q:"다음 문장을 듣고 알맞은 것을 고르세요.",
+    keyword:"32.",
+    audio:"audio/q32.mp3",
+    optionAudios:[
+    "audio/q32a.mp3",
+    "audio/q32b.mp3",
+    "audio/q32c.mp3",
+    "audio/q32d.mp3"],
+    options:["3층 회의실에서 한다고 들었어요.","교육은 누구나 받을 수 있어요.","성희롱 예방 교육은 두 시에 있어요.","성희롱 예방 교육은 꼭 들어야 돼요."],
+    answer:0
+  },
+  {
+    type:"listening",
+    q:"다음을 듣고 이어지는 말을 고르십시오.",
+    keyword:"33.",
+    audio:"audio/q33.mp3",
+    optionAudios:[
+    "audio/q33a.mp3",
+    "audio/q33b.mp3",
+    "audio/q33c.mp3",
+    "audio/q33d.mp3"],
+    options:["비상구가 어디인지 가르쳐 주세요.","불이 나자마자 밖으로 대피했어요.","소화기가 있어서 빨리 불을 껐어요.","비상구 위치를 잘 기억해 놓을게요."],
+    answer:3
+  },
+  {
+    type:"listening",
+    q:"다음을 듣고 들은 내용과 관계있는 그림을 고르십시오. ",
+    keyword:"34.",
+    audio:"audio/q34.mp3",
+    options: [
+    "https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/34a.jpg", 
+    "https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/34b.jpg", 
+    "https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/34c.jpg", 
+    "https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/34d.jpg"  
+  ],
+       answer:0
+  },
+  {
+    type:"listening",
+    q:"다음을 듣고 들은 내용과 관계있는 그림을 고르십시오. ",
+    keyword:"35.",
+    audio:"audio/q35.mp3",
+    options: [
+    "https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/35a.jpg", 
+    "https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/35b.jpg", 
+    "https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/35c.jpg", 
+    "https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/35d.jpg"  
+  ],
+    answer:1
+  },
+  {
+    type:"listening",
+    q:"다음을 듣고 들은 내용과 관계있는 그림을 고르십시오. ",
+    keyword:"36.",
+    audio:"audio/q36.mp3",
+    options: [
+    "https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/36a.jpg", 
+    "https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/36b.jpg", 
+    "https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/36c.jpg", 
+    "https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/36d.jpg"  
+  ],
+    answer:2
+  },
+  {
+    type:"listening",
+    q:"다음을 듣고 질문에 알맞은 대답을 고르십시오. ",
+    keyword:"37. 안경은 어디에 있습니까?",
+    audio:"audio/q37.mp3",
+    optionAudios:[
+    "audio/q37a.mp3",
+    "audio/q37b.mp3",
+    "audio/q37c.mp3",
+    "audio/q37d.mp3"],
+    image:"https://uploads.onecompiler.io/44bzqanza/44bzq9w9h/37.jpg",
+    options: [
+    "시계 아래에 있습니다.", 
+    "가방 안에 있습니다.", 
+    "의자 밑에 있습니다.", 
+    "서류 옆에 있습니다."  
+  ],
+    answer:3
+  },
+  {
+    type:"listening",
+     q:"다음을 듣고 질문에 알맞은 대답을 고르십시오. ",
+    keyword:"38. 남자가 이곳에 온 이유는 무엇입니까?",
+    audio:"audio/q38.mp3",
+    options: [
+    "노트북 수리를 맡기려고", 
+    "지하철 표를 구입하려고", 
+    "잃어버린 가방을 찾으려고", 
+    "내려야 할 역을 물어보려고"  
+  ],
+    answer:2
+  },
+   {
+    type:"listening",
+     q:"다음을 듣고 질문에 알맞은 대답을 고르십시오. ",
+    keyword:"39. 점심시간 전까지 포장 작업을 끝내야 하는 이유는 무엇입니까?",
+    audio:"audio/q39.mp3",
+    options: [
+    "작업 시간이 많이 걸려서", 
+    "포장할 물건이 너무 많아서", 
+    "오후에 라벨을 붙여야 해서", 
+    "오후에 제품을 출고해야 해서"  
+  ],
+    answer:3
+  },
+   {
+    type:"listening",
+     q:"다음을 듣고 질문에 알맞은 대답을 고르십시오. ",
+    keyword:"40. 다음 중 들은 내용과 같은 것은 무엇입니까?",
+    audio:"audio/q40.mp3",
+    options: [
+    "남자는 여자와 같은 공장에서 일합니다.", 
+    "남자는 아직 공장장님을 못 만났습니다.", 
+    "남자는 새 회사 사람들이 마음에 듭니다.", 
+    "남자는 이전 공장에서와 같은 일을 합니다."  
+  ],
+    answer:2
+  },
+
+];
+
+// --- APP LOGIC ---
+let current = 0;
+let answers = new Array(questions.length).fill(null);
+let playCount = 0; 
+let audioSequence = []; 
+let currentAudioIdx = 0; 
+
+function loadQuestion() {
+  const q = questions[current];
+  const audioBox = document.getElementById("audioBox");
+  const player = document.getElementById("audioPlayer");
+  const msg = document.getElementById("audioMsg");
+
+  document.getElementById("counter").innerText = `Question ${current + 1} / ${questions.length}`;
+  document.getElementById("question").innerHTML = q.q;
+
+  let extrasHTML = "";
+  if(q.followUp) extrasHTML += `<span class="follow-up">${q.followUp}</span>`;
+  if(q.keyword) extrasHTML += `<span class="keyword">${q.keyword}</span>`;
+  document.getElementById("qExtras").innerHTML = extrasHTML;
+
+  const img = document.getElementById("qImage");
+  if(q.image) {
+    img.src = q.image;
+    img.style.display = "block";
+  } else {
+    img.style.display = "none";
+  }
+
+  // --- LISTENING LOGIC UPDATED ---
+  if(q.type === "listening") {
+    audioBox.style.display = "block";
+    currentAudioIdx = 0;
+    playCount = 0; 
+    audioSequence = [q.audio];
+    if(q.optionAudios) audioSequence = audioSequence.concat(q.optionAudios);
+
+    player.src = audioSequence[0];
+    player.controls = false; // Itinatago ang play button para hindi ma-click ng user
+    msg.innerText = "🔊 Playing Audio (1/2)";
+
+    player.play().catch(() => {
+      msg.innerText = "⚠️ Click anywhere to enable audio";
+    });
+
+    player.onended = () => {
+      currentAudioIdx++;
+      if (currentAudioIdx < audioSequence.length) {
+        player.src = audioSequence[currentAudioIdx];
+        player.play();
+      } else {
+        playCount++;
+        if (playCount < 2) {
+          setTimeout(() => {
+            currentAudioIdx = 0;
+            player.src = audioSequence[0];
+            player.play();
+            msg.innerText = "🔊 Playing Audio (2/2)";
+          }, 2000); // 2 segundong pagitan bago ang pangalawang play
+        } else {
+          msg.innerText = "🚫 Audio Finished (No Replay Allowed)";
+          player.src = ""; // Tinatanggal ang source para hindi na ma-play ulit
+          player.controls = false; // Sinisiguradong tago ang controls
+        }
+      }
+    };
+  } else {
+    audioBox.style.display = "none";
+    player.pause();
+    player.src = "";
+    player.onended = null;
+  }
+
+  const choicesDiv = document.getElementById("choices");
+  choicesDiv.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement("span");
+    btn.innerHTML = `${i+1}. ${opt.includes("http") ? `<img src="${opt}">` : opt}`;
+    if (answers[current] === i) btn.classList.add("selected");
+    btn.onclick = () => {
+      answers[current] = i;
+      loadQuestion();
+    };
+    choicesDiv.appendChild(btn);
+  });
+}
+
+function changeQ(dir) {
+  let newIdx = current + dir;
+  if(newIdx >= 0 && newIdx < questions.length) {
+    current = newIdx;
+    loadQuestion();
+  }
+}
+
+function submitExam() {
+  if(!confirm("Submit Exam?")) return;
+  document.getElementById("quizContent").style.display = "none";
+  document.getElementById("navBtns").style.display = "none";
+  document.getElementById("submitBtn").style.display = "none";
+  document.getElementById("reviewArea").style.display = "block";
+  let score = 0;
+  const list = document.getElementById("reviewList");
+  list.innerHTML = "";
+  questions.forEach((q, i) => {
+    const isCorrect = answers[i] === q.answer;
+    if(isCorrect) score++;
+    const item = document.createElement("div");
+    item.className = `review-item ${isCorrect ? 'correct-card' : 'wrong-card'}`;
+    item.innerHTML = `<b>Q${i+1}:</b> ${q.q}<br><small>Correct: ${q.options[q.answer]}</small>`;
+    list.appendChild(item);
+  });
+  document.getElementById("finalScore").innerText = `Score: ${score} / ${questions.length}`;
+}
+
+let timeLeft = 50 * 60;
+setInterval(() => {
+  if(timeLeft > 0) {
+    timeLeft--;
+    let m = Math.floor(timeLeft/60);
+    let s = timeLeft%60;
+    document.getElementById("timer").innerText = `⏱ ${m}:${s.toString().padStart(2,"0")}`;
+  }
+}, 1000);
+
+function startQuiz() {
+  document.getElementById("startScreen").style.display = "none";
+  // Mag-play ng silent sound o i-initialize ang audio
+  const player = document.getElementById("audioPlayer");
+  player.play().catch(() => {}); 
+  loadQuestion();
+}
+</script>
+
+</body>
+</html>
