@@ -1,5 +1,8 @@
-const CACHE_NAME = 'eps-ubt-v4';
+const CACHE_NAME = 'eps-ubt-v5'; // Tumaas ang version
 const ASSETS = [
+  './',
+  'index.html', // Tinanggal ang ./ para mas safe sa GitHub
+  'manifest.json',
   './',
   './index.html',
   './styles.css',
@@ -56,8 +59,13 @@ const ASSETS = [
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Gagamit tayo ng return Promise.all para mas madaling makita kung may error sa isang file
-      return cache.addAll(ASSETS);
+      console.log('Caching assets...');
+      // Ginawang map para ma-detect kung anong specific na file ang nag-error
+      return Promise.all(
+        ASSETS.map(url => {
+          return cache.add(url).catch(err => console.error(`Failed to cache: ${url}`, err));
+        })
+      );
     })
   );
 });
@@ -66,8 +74,22 @@ self.addEventListener('install', (e) => {
 self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then((res) => {
+      // Kung audio ang request, mas safe na hayaan muna ang network kung may issue ang cache
+      if (e.request.url.includes('.mp3')) {
+        return res || fetch(e.request);
+      }
       return res || fetch(e.request);
     })
   );
 });
 
+// Activate - Clean up old caches
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+      );
+    })
+  );
+});
