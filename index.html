@@ -673,9 +673,15 @@ setInterval(() => {
 
 function startQuiz() {
   document.getElementById("startScreen").style.display = "none";
-  // Mag-play ng silent sound o i-initialize ang audio
   const player = document.getElementById("audioPlayer");
-  player.play().catch(() => {}); 
+  
+  // "Wake up" the audio player with a user gesture
+  player.load(); 
+  player.play().then(() => {
+    player.pause(); // I-pause agad para hindi tumunog pero "active" na siya
+    player.currentTime = 0;
+  }).catch(e => console.log("Audio prep failed:", e));
+  
   loadQuestion();
 }
 </script>
@@ -683,4 +689,5 @@ function startQuiz() {
 </body>
 
 </html>
+
 
